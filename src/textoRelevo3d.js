@@ -4,6 +4,19 @@ const { cuboid } = primitives;
 const { translate } = transforms;
 const { union } = booleans;
 
+function unirLista(formas) {
+  if (formas.length === 0) return null;
+  let nivel = formas;
+  while (nivel.length > 1) {
+    const proximo = [];
+    for (let i = 0; i < nivel.length; i += 2) {
+      proximo.push(i + 1 < nivel.length ? union(nivel[i], nivel[i + 1]) : nivel[i]);
+    }
+    nivel = proximo;
+  }
+  return nivel[0];
+}
+
 // Pilha de fontes CSS reais usada pelo Canvas 2D do navegador para rasterizar
 // cada opção do seletor "Fonte do Texto". Como depende do sistema operacional
 // do usuário, o navegador usa automaticamente a melhor opção instalada (ou um
@@ -133,7 +146,7 @@ export function gerarTextoRelevo({ texto, fonte = 'sans', alturaTextoMM = 6, esp
   if (blocosLinhas.length === 0) return null;
 
   return {
-    geometria: union(...blocosLinhas),
+    geometria: unirLista(blocosLinhas),
     largura: larguraMaxima,
     altura: linhas.length * alturaLinhaMM
   };
