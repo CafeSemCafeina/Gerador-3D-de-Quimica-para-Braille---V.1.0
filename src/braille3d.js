@@ -1,8 +1,9 @@
 import { primitives, transforms, booleans, text } from '@jscad/modeling';
 import { serialize } from '@jscad/stl-serializer';
+import { gerarTextoRelevo } from './textoRelevo3d';
 
 const { cuboid, roundedCuboid, sphere, cylinder } = primitives;
-const { translate, rotateZ } = transforms;
+const { translate, rotateZ, scale } = transforms;
 const { union, subtract } = booleans;
 const { vectorText } = text;
 
@@ -14,7 +15,7 @@ function calcularRaioEsfera(diametroBase, alturaCalota) {
 // ============================================================================
 // GERADOR ORIGINAL BRAILLE (MANTIDO)
 // ============================================================================
-export function gerarModeloJSCAD(cells, config = {}) {
+export function gerarModeloJSCAD(cells, config = {}, textoVerso = null) {
   if (!cells || cells.length === 0) return null;
 
   const ALTURA_PONTO = config.alturaPonto !== undefined ? parseFloat(config.alturaPonto) : 0.75;
@@ -76,7 +77,67 @@ export function gerarModeloJSCAD(cells, config = {}) {
     currentXIndex++;
   });
 
-  return placa ? union(placa, ...formasPontos) : union(...formasPontos);
+  let malhaBraille = placa ? union(placa, ...formasPontos) : union(...formasPontos);
+
+  // ==========================================================================
+  // TEXTO EM RELEVO NO VERSO (opcional): grava o texto/fórmula original em
+  // letras comuns (usando a fonte do sistema escolhida) no lado de trás da
+  // placa, tornando a peça legível também para pessoas videntes.
+  // Só é possível gravar/relevar algo se existir uma placa (ESPESSURA_PLACA > 0).
+  // ==========================================================================
+  if (textoVerso && textoVerso.ativo && textoVerso.texto && textoVerso.texto.trim() && ESPESSURA_PLACA > 0) {
+    const espessuraBruta = parseFloat(textoVerso.espessura ?? 1.0);
+
+    // Limita a profundidade de gravação (relevo negativo) para sempre sobrar
+    // ao menos ~0.6mm de placa sólida, protegendo os pontos Braille da frente.
+    const profundidadeMaxima = Math.max(ESPESSURA_PLACA - 0.6, 0.2);
+    const espessuraTexto = espessuraBruta < 0 ? -Math.min(Math.abs(espessuraBruta), profundidadeMaxima) : espessuraBruta;
+
+    if (espessuraTexto !== 0) {
+      const resultadoTexto = gerarTextoRelevo({
+        texto: textoVerso.texto,
+        fonte: textoVerso.fonte,
+        alturaTextoMM: parseFloat(textoVerso.tamanho ?? 6),
+        espessura: espessuraTexto
+      });
+
+      if (resultadoTexto && resultadoTexto.geometria) {
+        // Reduz o texto proporcionalmente se ele não couber na placa (nunca amplia).
+        const margemTexto = Math.min(MARGEM, 2.0);
+        const larguraDisponivel = comprimentoPlaca - (2 * margemTexto);
+        const alturaDisponivel = larguraPlaca - (2 * margemTexto);
+
+        let fatorEscala = 1;
+        if (larguraDisponivel > 0 && resultadoTexto.largura > larguraDisponivel) fatorEscala = Math.min(fatorEscala, larguraDisponivel / resultadoTexto.largura);
+        if (alturaDisponivel > 0 && resultadoTexto.altura > alturaDisponivel) fatorEscala = Math.min(fatorEscala, alturaDisponivel / resultadoTexto.altura);
+
+        let geometriaTexto = resultadoTexto.geometria;
+        if (fatorEscala < 1) geometriaTexto = scale([fatorEscala, fatorEscala, 1], geometriaTexto);
+
+        // Centraliza o bloco de texto no verso da placa (face Z=0).
+        const larguraFinal = resultadoTexto.largura * fatorEscala;
+        const alturaFinal = resultadoTexto.altura * fatorEscala;
+
+        // Espelha verticalmente (mantendo a esquerda/direita intactas): o
+        // bloco físico é lido virando-o 180° no eixo X (Braille passa a
+        // ficar voltado para baixo). Essa rotação física inverte o eixo Y
+        // do que está gravado no verso: sem este espelhamento aqui no
+        // modelo, o texto apareceria de cabeça para baixo depois de virado.
+        geometriaTexto = translate([0, alturaFinal, 0], scale([1, -1, 1], geometriaTexto));
+
+        const offsetX = (comprimentoPlaca - larguraFinal) / 2;
+        const offsetY = (larguraPlaca - alturaFinal) / 2;
+        // Relevo positivo: bloco inteiramente fora da placa (Z < 0), unido.
+        // Relevo negativo: bloco inteiramente dentro da placa, subtraído.
+        const zPos = espessuraTexto > 0 ? -(espessuraTexto / 2) : (Math.abs(espessuraTexto) / 2);
+
+        geometriaTexto = translate([offsetX, offsetY, zPos], geometriaTexto);
+        malhaBraille = espessuraTexto > 0 ? union(malhaBraille, geometriaTexto) : subtract(malhaBraille, geometriaTexto);
+      }
+    }
+  }
+
+  return malhaBraille;
 }
 
 // ============================================================================
