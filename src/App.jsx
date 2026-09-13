@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 // === ADIÇÕES DO VERCEL ANALYTICS ===
 import { Analytics } from '@vercel/analytics/react';
@@ -23,7 +24,7 @@ import ParceriasTab from './tabs/ParceriasTab';
 import EquipeTab from './tabs/EquipeTab';
 import BugTab from './tabs/BugTab';
 
-// === IMPORTAÇÕES DAS SUB ABS DE MATERIAIS DIDÁTICOS ===
+// === IMPORTAÇÕES DAS SUB ABAS DE MATERIAIS DIDÁTICOS ===
 import DadosRadioativosTab from './tabs/Materiais Didaticos/DadosRadioativosTab';
 import GiroscopiosTab from './tabs/Materiais Didaticos/GiroscopiosTab';
 import DadosIonicosTab from './tabs/Materiais Didaticos/DadosIonicosTab';
@@ -31,8 +32,6 @@ import ReguasQuimicasTab from './tabs/Materiais Didaticos/ReguasQuimicasTab';
 import GeometriaMolecularTab from './tabs/Materiais Didaticos/GeometriaMolecularTab';
 import CarimbosAtomicosTab from './tabs/Materiais Didaticos/CarimbosAtomicosTab';
 import SpinnerElementarTab from './tabs/Materiais Didaticos/SpinnerElementarTab';
-
-
 
 
 
@@ -56,96 +55,55 @@ import SpinnerElementarTab from './tabs/Materiais Didaticos/SpinnerElementarTab'
 // e adicione o `case` correspondente no `switch` abaixo.
 // ============================================================================
 
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState('gerador');
   const [corPrincipal, setCorPrincipal] = useState('#511576');
   const theme = getTheme(corPrincipal);
-
-  // Rotacao automatica do visualizador 3D: estado unico compartilhado entre
-  // as abas "Gerador Braille" e "Blocos Ionicos" (preserva o comportamento
-  // original do site, em que ligar a rotacao numa aba mantem o estado ao
-  // trocar de aba).
   const [autoRotate, setAutoRotate] = useState(false);
 
-  // Todo o estado/logica de cada aba geradora vive em seu respectivo hook.
   const gerador = useBrailleGerador();
   const ionico = useBlocoIonico(corPrincipal);
 
-  // === NOVA FUNÇÃO PARA RASTREAR A TROCA DE ABAS ===
-  const handleTrocarAba = (novaAba) => {
-    setActiveTab(novaAba); // Muda a aba visualmente
-    track('Acesso_Aba', { nome_da_aba: novaAba }); // Envia o dado silenciosamente para a Vercel
-  };
-  // =================================================
-
-const renderConteudoAba = () => {
-    switch (activeTab) {
-      case 'gerador':
-        return ( <GeradorBrailleTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} autoRotate={autoRotate} setAutoRotate={setAutoRotate} gerador={gerador} /> );
-        
-      case 'ionicos':
-        return ( <BlocosIonicosTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} autoRotate={autoRotate} setAutoRotate={setAutoRotate} ionico={ionico} /> );
-
-      // === SUB-ABAS DE MATERIAIS DIDÁTICOS ===
-      case 'dados-radioativos':
-        return <DadosRadioativosTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />;
-        
-      case 'giroscopios':
-        return <GiroscopiosTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />;
-        
-      case 'dados-ionicos':
-        return <DadosIonicosTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />;
-        
-      case 'reguas':
-        return <ReguasQuimicasTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />;
-        
-      case 'geometria':
-        return <GeometriaMolecularTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />;
-        
-      case 'carimbos':
-        return <CarimbosAtomicosTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />;
-        
-      case 'spinner':
-        return <SpinnerElementarTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />;
-        
-      case 'sobre':
-        return ( <SobreProjetoTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} /> );
-        
-      case 'instrucoes':
-        return ( <InstrucoesTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} /> );
-        
-      case 'saiba-mais':
-        return ( <SaibaMaisTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} /> );
-        
-      case 'parcerias':
-        return ( <ParceriasTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} /> );
-        
-      case 'equipe':
-        return ( <EquipeTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} /> );
-        
-      case 'bug':
-        return ( <BugTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} /> );
-        
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="flex flex-col min-h-screen font-sans text-slate-800 transition-colors duration-500" style={{ backgroundColor: theme.fundoPrincipal }}>
-      <Header theme={theme} />
-      
-      {/* Aqui substituímos setActiveTab por handleTrocarAba */}
-      <Navigation activeTab={activeTab} setActiveTab={handleTrocarAba} theme={theme} />
+    <Router>
+      <div className="flex flex-col min-h-screen font-sans text-slate-800 transition-colors duration-500" style={{ backgroundColor: theme.fundoPrincipal }}>
+        <Header theme={theme} />
+        
+        {/* O Navigation não recebe mais activeTab/setActiveTab, ele lerá a URL atual via React Router */}
+        <Navigation theme={theme} />
 
-      <main className="flex-grow p-4 sm:p-6 w-full max-w-5xl mx-auto">
-        {renderConteudoAba()}
-      </main>
+        <main className="flex-grow p-4 sm:p-6 w-full max-w-5xl mx-auto">
+          <Routes>
+            <Route path="/" element={<Navigate to="/gerador" replace />} />
+            
+            <Route path="/gerador" element={<GeradorBrailleTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} autoRotate={autoRotate} setAutoRotate={setAutoRotate} gerador={gerador} />} />
+            <Route path="/ionicos" element={<BlocosIonicosTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} autoRotate={autoRotate} setAutoRotate={setAutoRotate} ionico={ionico} />} />
+            
+            <Route path="/dados-radioativos" element={<DadosRadioativosTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/giroscopios" element={<GiroscopiosTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/dados-ionicos" element={<DadosIonicosTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/reguas" element={<ReguasQuimicasTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/geometria" element={<GeometriaMolecularTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/carimbos" element={<CarimbosAtomicosTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/spinner" element={<SpinnerElementarTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            
+            <Route path="/sobre" element={<SobreProjetoTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/instrucoes" element={<InstrucoesTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/saiba-mais" element={<SaibaMaisTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/parcerias" element={<ParceriasTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/equipe" element={<EquipeTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            <Route path="/bug" element={<BugTab theme={theme} corPrincipal={corPrincipal} setCorPrincipal={setCorPrincipal} />} />
+            
+            {/* Fallback de erro */}
+            <Route path="*" element={<Navigate to="/gerador" replace />} />
+          </Routes>
+        </main>
 
-      <Footer theme={theme} />
-      
-      {/* === ADIÇÃO DO COMPONENTE ANALYTICS DO VERCEL === */}
-      <Analytics />
-    </div>
+        <Footer theme={theme} />
+        {/* === ADIÇÃO DO COMPONENTE ANALYTICS DO VERCEL === */}
+        <Analytics />
+        
+      </div>
+    </Router>
   );
 }
