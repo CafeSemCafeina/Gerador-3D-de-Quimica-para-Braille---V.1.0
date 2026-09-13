@@ -49,8 +49,14 @@ const ENTRELINHA_FATOR = 1.35;  // Espaço vertical entre linhas, em múltiplos 
  * Cada célula é conferida por área (não por amostragem esparsa), então
  * traços finos não são perdidos mesmo em resoluções físicas maiores.
  */
+function criarCanvas() {
+  if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(1, 1);
+  if (typeof document !== 'undefined') return document.createElement('canvas');
+  throw new Error('Canvas indisponível para rasterizar o texto do verso');
+}
+
 function rasterizarLinha(linha, fontFamily, alturaTextoMM) {
-  const canvas = document.createElement('canvas');
+  const canvas = criarCanvas();
   const ctx = canvas.getContext('2d');
   ctx.font = `bold ${RENDER_PX}px ${fontFamily}`;
   const metricsIniciais = ctx.measureText(linha);
