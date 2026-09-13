@@ -39,7 +39,7 @@ export const MAPA_FONTES_CSS = {
 };
 
 const RENDER_PX = 200;          // Altura de fonte usada na amostragem (px no canvas)
-const TAMANHO_CELULA_MM = 0.35; // Resolução física da malha (~diâmetro de um bico de impressora 0.4mm)
+const TAMANHO_CELULA_MM = 0.55; // Resolução física da malha (bico ~0.4mm; mais grosso = menos cuboides no CSG)
 const ENTRELINHA_FATOR = 1.35;  // Espaço vertical entre linhas, em múltiplos da altura do texto
 
 /**
