@@ -45,16 +45,36 @@ export const useBrailleGerador = () => {
     return result;
   };
 
+  const invalidarStl = () => {
+    setStlUrl((url) => {
+      if (url) URL.revokeObjectURL(url);
+      return null;
+    });
+    setDimensoesGerador(null);
+  };
+
   useEffect(() => { parseBraille(input); }, []);
 
   const handleAplicarSugestao = (novaFormula) => {
     setInput(novaFormula);
     parseBraille(novaFormula);
+    invalidarStl();
   };
 
   const handleInputChange = (novoValor) => {
     setInput(novoValor);
     parseBraille(novoValor);
+    invalidarStl();
+  };
+
+  const atualizarConfig3D = (next) => {
+    setConfig3D(next);
+    invalidarStl();
+  };
+
+  const atualizarConfigTextoVerso = (next) => {
+    setConfigTextoVerso(next);
+    invalidarStl();
   };
 
   const handleGenerate = async (e) => {
@@ -62,11 +82,11 @@ export const useBrailleGerador = () => {
     const blocosGerados = parseBraille(input);
     if (!blocosGerados || blocosGerados.length === 0) return;
 
-    setIsGenerating(true); setStlUrl(null); setDimensoesGerador(null);
+    setIsGenerating(true); invalidarStl();
     await new Promise(resolve => setTimeout(resolve, 50));
 
     try {
-      const modelo3D = gerarModeloJSCAD(blocosGerados, config3D);
+      const modelo3D = gerarModeloJSCAD(blocosGerados, config3D, { ...configTextoVerso, texto: input });
       const url = gerarUrlSTL(modelo3D);
       setStlUrl(url);
     } catch (error) { console.error("Erro ao gerar modelo:", error); alert("Ocorreu um erro ao gerar a malha 3D."); }
@@ -123,10 +143,8 @@ export const useBrailleGerador = () => {
     input, setInput: handleInputChange, cells, isGenerating, stlUrl,
     dimensoesGerador, setDimensoesGerador, mostrarDimensoesGerador, setMostrarDimensoesGerador,
     copiado, brailleInput, translatedText, isListening, showAdvanced, setShowAdvanced,
-    config3D, setConfig3D, 
-    
-    // Adição da variavel de Texto no Verso para a interface da Aba ler e modificar (deve fazer o site voltar ao ar)
-    configTextoVerso, setConfigTextoVerso, 
+    config3D, setConfig3D: atualizarConfig3D,
+    configTextoVerso, setConfigTextoVerso: atualizarConfigTextoVerso, 
     
     sugestaoQuimica, handleAplicarSugestao, handleGenerate,
     brailleUnicodeText, handleCopy, handleBrailleTranslate, handleClearTranslator,
