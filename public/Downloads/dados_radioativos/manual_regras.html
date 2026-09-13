@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manual de Regras — Dados Radioativos</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0 auto;
+      max-width: 42rem;
+      padding: 1.5rem 1.25rem 3rem;
+      font: 1.05rem/1.55 system-ui, "Segoe UI", Roboto, sans-serif;
+      color: #1e293b;
+      background: #fff;
+    }
+    h1 { font-size: 1.75rem; line-height: 1.2; margin: 0 0 0.5rem; }
+    h2 { font-size: 1.2rem; margin: 1.75rem 0 0.5rem; }
+    p, li { text-align: justify; }
+    .lead { color: #511576; font-weight: 600; margin-top: 0; }
+    ol { padding-left: 1.25rem; }
+    code { font-family: ui-monospace, Consolas, monospace; }
+    @media print { body { max-width: none; } }
+  </style>
+</head>
+<body>
+  <h1>Dados Radioativos — Manual de Regras</h1>
+  <p class="lead">Experimento estatístico de meia-vida e decaimento nuclear, com versão digital e conjunto físico em impressão 3D.</p>
+
+  <h2>O experimento</h2>
+  <p>
+    O material didático ensina decaimento radioativo e tempo de meia-vida pela estatística.
+    Dados com faces customizadas (símbolo radioativo) permitem ver e contar um fenômeno
+    microscópico de forma tátil.
+  </p>
+
+  <h2>Como jogar</h2>
+  <ol>
+    <li>Comece com um conjunto de dados (no site, o padrão é 42). Cada dado é um núcleo.</li>
+    <li>Lance todos os dados da rodada — no físico ou pelo botão <strong>Jogar Dados</strong> no site.</li>
+    <li>Todo dado com o símbolo radioativo para cima sofreu decaimento: retire-o do conjunto.</li>
+    <li>Anote quantos núcleos restam. Essa é a quantidade experimental da rodada.</li>
+    <li>Repita até não restar nenhum dado, ou até preencher a tabela.</li>
+  </ol>
+  <p>
+    A probabilidade de decaimento por rodada é <code>p = F/6</code>, em que <code>F</code> é o número
+    de faces radioativas (0 a 5). A fração que permanece é <code>(6 − F)/6</code>.
+  </p>
+
+  <h2>Meia-vida e gráfico</h2>
+  <p>
+    A constante de decaimento é <code>λ = −ln((6 − F)/6)</code>. A meia-vida em rodadas é
+    <code>t<sub>1/2</sub> = ln(2)/λ</code>. A curva teórica usada na comparação é
+    <code>N(t) = N<sub>0</sub> · e<sup>−λt</sup></code>.
+  </p>
+  <p>
+    Depois das rodadas, compare a curva experimental com a teórica. O site mostra o
+    coeficiente de determinação R² quando a simulação termina.
+  </p>
+
+  <h2>Conjunto físico (impressão 3D)</h2>
+  <p>
+    O arquivo 3MF reúne as placas dos conjuntos (numeradas e nomeadas), os dados e o
+    estojo para 216 peças, com marcações em Braille. Tempos típicos em Bambu Lab P1S
+    ou Anycubic Kobra 3 Combo: cerca de 7 h por conjunto radioativo (5 × 42), 1 h para
+    os 6 dados estáveis e 4 h para o case — cerca de 40 h no total.
+  </p>
+  <p>
+    <strong>Multimaterial (AMS / ACE Pro):</strong> o 3MF já vai pronto para fatiar.
+    <strong>Uma extrusora (ex.: Ender-3 V3 KE):</strong> coloque pausas (comando M600)
+    na camada dos textos e símbolos e troque o filamento à mão.
+  </p>
+  <p>
+    Arquivo do conjunto: <a href="./Dados%20Radioativos%20-%20Remix%20Andre%20Gaito.3mf">Dados Radioativos — Remix André Gaito (3MF)</a>.
+  </p>
+
+  <p>Química ao Alcance das Mãos — André Vinnicios S. Gaito.</p>
+</body>
+</html>
