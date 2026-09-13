@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { track } from '@vercel/analytics';
 import ColorTester from '../../components/common/ColorTester';
+import { imgMultiCor, imgSelecaoImpressora } from '../../data/assets';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const ARQUIVO_3MF = `/Downloads/dados_radioativos/${encodeURIComponent('Dados Radioativos - Remix Andre Gaito.3mf')}`;
+const MANUAL_REGRAS = '/Downloads/dados_radioativos/manual_regras.html';
+const FOTO_DADOS_FISICOS = `/Downloads/dados_radioativos/${encodeURIComponent('WhatsApp Image 2026-08-19 at 09.23.42.jpeg')}`;
 
 const MAX_RODADAS = 30;
 
@@ -472,37 +477,40 @@ const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
             </ul>
           </div>
 
-          {/* Botões de Download */}
+          <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm mb-8">
+            <img src={FOTO_DADOS_FISICOS} alt="Dados radioativos impressos em 3D na palma da mão, com símbolo de radiação e faces coloridas" className="w-full h-auto rounded" />
+            <p className="text-sm text-slate-600 mt-2 text-center">Conjunto físico impresso: dados radioativos e face estável</p>
+          </div>
+
           <div className="flex flex-wrap gap-4 mb-10">
-            <a 
-              href="/downloads/dados_radioativos.3mf" 
-              download
+            <a
+              href={ARQUIVO_3MF}
+              download="dados_radioativos.3mf"
               className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-semibold transition-opacity hover:opacity-90"
               style={{ backgroundColor: corPrincipal }}
             >
               Baixar Arquivo 3MF
             </a>
-            <a 
-              href="/downloads/manual_regras.pdf" 
+            <a
+              href={MANUAL_REGRAS}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 px-6 py-3 rounded-lg text-slate-700 font-semibold border-2 bg-white hover:bg-slate-50 transition-colors"
               style={{ borderColor: corPrincipal }}
             >
-              Abrir Manual de Regras (PDF)
+              Abrir Manual de Regras
             </a>
           </div>
 
-          {/* Galeria de Instruções do Fatiador */}
           <h3 className="font-bold text-lg mb-4 text-slate-800">Instruções de Fatiamento</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
-              <img src="/images/dados/instrucao_1.png" alt="Instrução de fatiamento para sistema multicolor" className="w-full h-auto rounded" />
+              <img src={imgMultiCor} alt="Pré-visualização no OrcaSlicer para impressão multimaterial" className="w-full h-auto rounded" />
               <p className="text-sm text-slate-600 mt-2 text-center">Configuração para sistemas Multicores</p>
             </div>
             <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
-              <img src="/images/dados/instrucao_2.png" alt="Instrução para pausa e troca de cor (M600)" className="w-full h-auto rounded" />
-              <p className="text-sm text-slate-600 mt-2 text-center">Configuração de pausa (M600) para monocromáticas</p>
+              <img src={imgSelecaoImpressora} alt="Seleção de impressora no OrcaSlicer para máquina de uma extrusora" className="w-full h-auto rounded" />
+              <p className="text-sm text-slate-600 mt-2 text-center">Impressora de uma extrusora: no fatiador, pause com M600 na camada dos textos</p>
             </div>
           </div>
         </div>
