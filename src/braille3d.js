@@ -3,7 +3,7 @@ import { serialize } from '@jscad/stl-serializer';
 import { gerarTextoRelevo } from './textoRelevo3d';
 
 const { cuboid, roundedCuboid, sphere, cylinder } = primitives;
-const { translate, rotateZ, scale } = transforms;
+const { translate, rotateZ, scale, mirrorY } = transforms;
 const { union, subtract } = booleans;
 const { vectorText } = text;
 
@@ -112,7 +112,7 @@ export function gerarModeloJSCAD(cells, config = {}, textoVerso = null) {
         if (alturaDisponivel > 0 && resultadoTexto.altura > alturaDisponivel) fatorEscala = Math.min(fatorEscala, alturaDisponivel / resultadoTexto.altura);
 
         let geometriaTexto = resultadoTexto.geometria;
-        if (fatorEscala < 1) geometriaTexto = scale([fatorEscala, fatorEscala, 1], geometriaTexto);
+        if (fatorEscala > 0 && fatorEscala < 1) geometriaTexto = scale([fatorEscala, fatorEscala, 1], geometriaTexto);
 
         // Centraliza o bloco de texto no verso da placa (face Z=0).
         const larguraFinal = resultadoTexto.largura * fatorEscala;
@@ -123,7 +123,7 @@ export function gerarModeloJSCAD(cells, config = {}, textoVerso = null) {
         // ficar voltado para baixo). Essa rotação física inverte o eixo Y
         // do que está gravado no verso: sem este espelhamento aqui no
         // modelo, o texto apareceria de cabeça para baixo depois de virado.
-        geometriaTexto = translate([0, alturaFinal, 0], scale([1, -1, 1], geometriaTexto));
+        geometriaTexto = translate([0, alturaFinal, 0], mirrorY(geometriaTexto));
 
         const offsetX = (comprimentoPlaca - larguraFinal) / 2;
         const offsetY = (larguraPlaca - alturaFinal) / 2;

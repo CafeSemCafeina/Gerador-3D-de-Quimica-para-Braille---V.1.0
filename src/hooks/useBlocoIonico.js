@@ -30,15 +30,39 @@ export const useBlocoIonico = (corPrincipal) => {
   const [mostrarDimensoesIonico, setMostrarDimensoesIonico] = useState(true);
   const [showDimensoesFisicasIonico, setShowDimensoesFisicasIonico] = useState(true);
 
+  const CAMPOS_MALHA = [
+    'tipo', 'valencia', 'largura', 'altura', 'espessura',
+    'larguraEncaixe', 'alturaEncaixe', 'formula', 'espessuraTexto',
+    'fonte', 'incluirBraille'
+  ];
+
+  const invalidarIonStl = () => {
+    setIonStlUrl((url) => {
+      if (url) URL.revokeObjectURL(url);
+      return null;
+    });
+    setDimensoesIonico(null);
+  };
+
+  const aplicarIonConfig = (next) => {
+    setIonConfig((prev) => {
+      const resolved = typeof next === 'function' ? next(prev) : next;
+      if (CAMPOS_MALHA.some((campo) => resolved[campo] !== prev[campo])) {
+        queueMicrotask(invalidarIonStl);
+      }
+      return resolved;
+    });
+  };
+
   useEffect(() => {
     if (!ionConfig.corCustomizada) {
-      setIonConfig(prev => ({ ...prev, corModelo: getIonColorBasedOnTheme(corPrincipal, prev.tipo) }));
+      aplicarIonConfig(prev => ({ ...prev, corModelo: getIonColorBasedOnTheme(corPrincipal, prev.tipo) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [corPrincipal, ionConfig.tipo]);
 
   const selecionarTipoValencia = (tipo, valencia) => {
-    setIonConfig(prev => ({
+    aplicarIonConfig(prev => ({
       ...prev,
       tipo,
       valencia,
@@ -48,7 +72,7 @@ export const useBlocoIonico = (corPrincipal) => {
 
   const handleGenerateIon = async (e) => {
     e.preventDefault();
-    setIsGeneratingIon(true); setIonStlUrl(null); setDimensoesIonico(null);
+    setIsGeneratingIon(true); invalidarIonStl();
     await new Promise(resolve => setTimeout(resolve, 50));
 
     try {
@@ -60,7 +84,7 @@ export const useBlocoIonico = (corPrincipal) => {
   };
 
   return {
-    ionConfig, setIonConfig, selecionarTipoValencia,
+    ionConfig, setIonConfig: aplicarIonConfig, selecionarTipoValencia,
     ionStlUrl, isGeneratingIon, handleGenerateIon,
     dimensoesIonico, setDimensoesIonico,
     mostrarDimensoesIonico, setMostrarDimensoesIonico,
