@@ -1,14 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { track } from '@vercel/analytics'; // 1. Importação da função track do Vercel Analytics
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { track } from '@vercel/analytics';
 import ColorTester from '../../components/common/ColorTester';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
+const MAX_RODADAS = 30;
+
+const obterCorComplementar = (cor) => {
+  if (!cor) return '#10b981';
+  const c = String(cor).toLowerCase();
+  
+  if (c.includes('purple') || c.includes('8b5cf6') || c.includes('a855f7') || c.includes('9333ea')) return '#22c55e';
+  if (c.includes('green') || c.includes('22c55e') || c.includes('16a34a') || c.includes('15803d')) return '#8b5cf6';
+  if (c.includes('blue') || c.includes('3b82f6') || c.includes('2563eb') || c.includes('1d4ed8')) return '#ef4444';
+  if (c.includes('red') || c.includes('ef4444') || c.includes('dc2626') || c.includes('b91c1c')) return '#3b82f6';
+  
+  return '#f59e0b';
+};
+
 const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
-  // ==========================================
-  // ADIÇÃO DE TRIGGER EVENTO DE VISUALIZAÇÃO DA ABA
-  // ==========================================
   useEffect(() => {
-    // Dispara o evento 'Visualizou Aba' assim que este componente é renderizado
     track('Visualizou Aba', {
       aba: 'Dados Radioativos'
     });
@@ -30,10 +40,10 @@ const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
       try {
         return JSON.parse(salvo);
       } catch (e) {
-        // Fallback caso haja erro de parsing
+        console.error("Erro ao fazer parse dos dados experimentais", e);
       }
     }
-    return Array.from({ length: 30 }, (_, i) => ({
+    return Array.from({ length: MAX_RODADAS }, (_, i) => ({
       rodada: i,
       experimental: i === 0 ? 42 : '', 
     }));
@@ -51,124 +61,133 @@ const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
     sessionStorage.setItem('dados_rad_experimentais', JSON.stringify(dadosExperimentais));
   }, [dadosExperimentais]);
 
-  const handleInputChange = (index, value) => {
-    const novosDados = [...dadosExperimentais];
-    novosDados[index].experimental = value === '' ? '' : Number(value);
-    setDadosExperimentais(novosDados);
-  };
+  const handleInputChange = useCallback((index, value) => {
+    setDadosExperimentais((prev) => {
+      const novosDados = [...prev];
+      novosDados[index].experimental = value === '' ? '' : Number(value);
+      return novosDados;
+    });
+  }, []);
 
-  const handleQuantidadeInicial = (e) => {
+  const handleQuantidadeInicial = useCallback((e) => {
     const novoValor = Number(e.target.value);
     if (novoValor >= 0) {
       setQuantidadeInicial(novoValor);
-      const novosDados = [...dadosExperimentais];
-      novosDados[0].experimental = novoValor;
-      setDadosExperimentais(novosDados);
+      setDadosExperimentais((prev) => {
+        const novosDados = [...prev];
+        novosDados[0].experimental = novoValor;
+        return novosDados;
+      });
     }
-  };
+  }, []);
 
-  const handleJogarDados = () => {
-    // 2. Evento opcional para rastrear o engajamento com a ferramenta
+  const handleJogarDados = useCallback(() => {
     track('Clicou Jogar Dados', {
       faces_radioativas: facesRadioativas,
       dados_iniciais: quantidadeInicial
     });
 
-    const indexVazio = dadosExperimentais.findIndex((d, idx) => idx > 0 && d.experimental === '');
-    if (indexVazio === -1) return;
+    setDadosExperimentais((prev) => {
+      const indexVazio = prev.findIndex((d, idx) => idx > 0 && d.experimental === '');
+      if (indexVazio === -1) return prev;
 
-    const qtdAnterior = Number(dadosExperimentais[indexVazio - 1].experimental);
-    if (isNaN(qtdAnterior) || qtdAnterior <= 0) return;
+      const qtdAnterior = Number(prev[indexVazio - 1].experimental);
+      if (isNaN(qtdAnterior) || qtdAnterior <= 0) return prev;
 
-    const p = facesRadioativas / 6;
-    let restantes = 0;
-    
-    for (let i = 0; i < qtdAnterior; i++) {
-      if (Math.random() >= p) {
-        restantes++;
+      const p = facesRadioativas / 6;
+      let restantes = 0;
+      
+      for (let i = 0; i < qtdAnterior; i++) {
+        if (Math.random() >= p) {
+          restantes++;
+        }
       }
-    }
 
-    const novosDados = [...dadosExperimentais];
-    novosDados[indexVazio].experimental = restantes;
-    setDadosExperimentais(novosDados);
-  };
+      const novosDados = [...prev];
+      novosDados[indexVazio].experimental = restantes;
+      return novosDados;
+    });
+  }, [facesRadioativas, quantidadeInicial]);
 
-  const handleReiniciarSimulacao = () => {
-    const novosDados = Array.from({ length: 22 }, (_, i) => ({
+  const handleReiniciarSimulacao = useCallback(() => {
+    const novosDados = Array.from({ length: MAX_RODADAS }, (_, i) => ({
       rodada: i,
       experimental: i === 0 ? quantidadeInicial : '',
     }));
     setDadosExperimentais(novosDados);
-  };
+  }, [quantidadeInicial]);
 
-  const obterCorComplementar = (cor) => {
-    if (!cor) return '#10b981';
-    const c = String(cor).toLowerCase();
+  const corComplementar = useMemo(() => obterCorComplementar(corPrincipal), [corPrincipal]);
+
+  const parametrosMatematicos = useMemo(() => {
+    const p = facesRadioativas / 6;
+    const fracaoRestante = (6 - facesRadioativas) / 6;
+    const lambda = facesRadioativas === 0 ? 0 : -Math.log(fracaoRestante);
+    const meiaVida = facesRadioativas === 0 ? 'Infinita' : (Math.LN2 / lambda).toFixed(1);
     
-    if (c.includes('purple') || c.includes('8b5cf6') || c.includes('a855f7') || c.includes('9333ea')) return '#22c55e';
-    if (c.includes('green') || c.includes('22c55e') || c.includes('16a34a') || c.includes('15803d')) return '#8b5cf6';
-    if (c.includes('blue') || c.includes('3b82f6') || c.includes('2563eb') || c.includes('1d4ed8')) return '#ef4444';
-    if (c.includes('red') || c.includes('ef4444') || c.includes('dc2626') || c.includes('b91c1c')) return '#3b82f6';
-    
-    return '#f59e0b';
-  };
+    return { p, fracaoRestante, lambda, meiaVida, lambdaFormatado: lambda.toFixed(3).replace('.', ',') };
+  }, [facesRadioativas]);
 
-  const corComplementar = obterCorComplementar(corPrincipal);
+  const { lambda, meiaVida, lambdaFormatado, p, fracaoRestante } = parametrosMatematicos;
 
-  const p = facesRadioativas / 6;
-  const fracaoRestante = (6 - facesRadioativas) / 6;
-  const lambda = facesRadioativas === 0 ? 0 : -Math.log(fracaoRestante);
-  const meiaVida = facesRadioativas === 0 ? 'Infinita' : (Math.LN2 / lambda).toFixed(1);
+  const dadosGraficoProcessados = useMemo(() => {
+    const baseGrafico = dadosExperimentais.map((linha) => {
+      const teorico = Number((quantidadeInicial * Math.exp(-lambda * linha.rodada)).toFixed(2));
+      return {
+        ...linha,
+        teorico,
+        experimentalDecaido: linha.experimental !== '' ? quantidadeInicial - linha.experimental : null
+      };
+    });
 
-  const dadosGrafico = dadosExperimentais.map((linha) => {
-    const teorico = Number((quantidadeInicial * Math.exp(-lambda * linha.rodada)).toFixed(2));
-    return {
-      ...linha,
-      teorico,
-      experimentalDecaido: linha.experimental !== '' ? quantidadeInicial - linha.experimental : null
-    };
-  });
-
-  let ultimaRodadaPreenchida = 0;
-  for (let i = dadosGrafico.length - 1; i >= 0; i--) {
-    if (dadosGrafico[i].experimental !== '') {
-      ultimaRodadaPreenchida = i;
-      break;
-    }
-  }
-  const dadosFiltradosGrafico = dadosGrafico.slice(0, ultimaRodadaPreenchida + 1);
-
-  const limiteYAxis = Math.ceil(quantidadeInicial * 1.15);
-  const lambdaFormatado = lambda.toFixed(3).replace('.', ',');
-
-  const proximoIndiceVazio = dadosExperimentais.findIndex((d, idx) => idx > 0 && d.experimental === '');
-  const simulacaoConcluída = proximoIndiceVazio === -1 || (ultimaRodadaPreenchida > 0 && dadosGrafico[ultimaRodadaPreenchida].experimental === 0);
-
-  let r2ValorCalculado = null;
-  if (simulacaoConcluída && ultimaRodadaPreenchida > 0) {
-    const pontosValidos = dadosFiltradosGrafico.filter(d => d.experimental !== '');
-    const n = pontosValidos.length;
-    if (n > 1) {
-      const somaY = pontosValidos.reduce((acc, curr) => acc + curr.experimental, 0);
-      const mediaY = somaY / n;
-
-      let sqRes = 0;
-      let sqTot = 0;
-
-      pontosValidos.forEach(curr => {
-        sqRes += Math.pow(curr.experimental - curr.teorico, 2);
-        sqTot += Math.pow(curr.experimental - mediaY, 2);
-      });
-
-      if (sqTot > 0) {
-        const r2 = 1 - (sqRes / sqTot);
-        r2ValorCalculado = r2 >= 0 ? r2.toFixed(3).replace('.', ',') : '0,000';
-      } else {
-        r2ValorCalculado = '1,000';
+    let ultimaRodada = 0;
+    for (let i = baseGrafico.length - 1; i >= 0; i--) {
+      if (baseGrafico[i].experimental !== '') {
+        ultimaRodada = i;
+        break;
       }
     }
-  }
+    
+    const proximoIndiceVazio = dadosExperimentais.findIndex((d, idx) => idx > 0 && d.experimental === '');
+    const simulacaoConcluida = proximoIndiceVazio === -1 || (ultimaRodada > 0 && baseGrafico[ultimaRodada].experimental === 0);
+
+    return {
+      dadosGrafico: baseGrafico,
+      dadosFiltradosGrafico: baseGrafico.slice(0, ultimaRodada + 1),
+      ultimaRodadaPreenchida: ultimaRodada,
+      simulacaoConcluida
+    };
+  }, [dadosExperimentais, quantidadeInicial, lambda]);
+
+  const { dadosGrafico, dadosFiltradosGrafico, ultimaRodadaPreenchida, simulacaoConcluida } = dadosGraficoProcessados;
+
+  const r2ValorCalculado = useMemo(() => {
+    if (!simulacaoConcluida || ultimaRodadaPreenchida <= 0) return null;
+    
+    const pontosValidos = dadosFiltradosGrafico.filter(d => d.experimental !== '');
+    const n = pontosValidos.length;
+    
+    if (n <= 1) return null;
+
+    const somaY = pontosValidos.reduce((acc, curr) => acc + curr.experimental, 0);
+    const mediaY = somaY / n;
+
+    let sqRes = 0;
+    let sqTot = 0;
+
+    pontosValidos.forEach(curr => {
+      sqRes += Math.pow(curr.experimental - curr.teorico, 2);
+      sqTot += Math.pow(curr.experimental - mediaY, 2);
+    });
+
+    if (sqTot > 0) {
+      const r2 = 1 - (sqRes / sqTot);
+      return r2 >= 0 ? r2.toFixed(3).replace('.', ',') : '0,000';
+    }
+    return '1,000';
+  }, [simulacaoConcluida, ultimaRodadaPreenchida, dadosFiltradosGrafico]);
+
+  const limiteYAxis = Math.ceil(quantidadeInicial * 1.15);
 
   return (
     <div id="painel-dados-radioativos" role="tabpanel" aria-label="Dados Radioativos" className="relative p-8 sm:p-12 rounded-xl shadow-sm transition-colors duration-500 text-slate-700 fade-in space-y-8 text-left" style={{ backgroundColor: theme.fundoCaixa, border: `2px solid ${theme.bordaGeral}` }}>
@@ -218,7 +237,7 @@ const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
                 value={facesRadioativas}
                 onChange={(e) => setFacesRadioativas(Number(e.target.value))}
                 className="w-20 text-center border border-slate-300 rounded-md py-1.5 px-2 focus:outline-none focus:ring-2 transition-all font-bold bg-white"
-                style={{ focusRingColor: corPrincipal }}
+                style={{ outlineColor: corPrincipal }}
               >
                 {[0, 1, 2, 3, 4, 5].map((val) => (
                   <option key={val} value={val}>{val}/6</option>
@@ -234,16 +253,16 @@ const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
                 value={quantidadeInicial}
                 onChange={handleQuantidadeInicial}
                 className="w-20 text-center border border-slate-300 rounded-md py-1.5 px-2 focus:outline-none focus:ring-2 transition-all font-bold"
-                style={{ focusRingColor: corPrincipal }}
+                style={{ outlineColor: corPrincipal }}
               />
             </div>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={handleJogarDados}
-                disabled={simulacaoConcluída}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md font-bold text-white shadow-sm transition-all ${simulacaoConcluída ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'hover:opacity-90 active:scale-95'}`}
-                style={{ backgroundColor: simulacaoConcluída ? undefined : corPrincipal }}
+                disabled={simulacaoConcluida}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md font-bold text-white shadow-sm transition-all ${simulacaoConcluida ? 'opacity-50 cursor-not-allowed bg-slate-400' : 'hover:opacity-90 active:scale-95'}`}
+                style={{ backgroundColor: simulacaoConcluida ? undefined : corPrincipal }}
                 title="Simular a próxima rodada de lançamento de dados"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -286,8 +305,7 @@ const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
                 <div className="flex flex-col sm:flex-row justify-between px-6 py-4 hover:bg-slate-50 transition-colors">
                   <span className="font-semibold text-slate-700">Meia Vida (t<sub>1/2</sub>)</span>
                   <span className="font-bold text-slate-900 mt-1 sm:mt-0">
-                    ln(2) / λ = {facesRadioativas === 0 ? 0 : 'ln(2) / ' + lambdaFormatado + ' = '}
-                    {meiaVida} {facesRadioativas !== 0 && 'rodadas'}
+                    {facesRadioativas === 0 ? '0' : `ln(2) / ${lambdaFormatado} = ${meiaVida} rodadas`}
                   </span>
                 </div>
               </div>
@@ -314,7 +332,6 @@ const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
                   />
                   <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: '20px' }} />
                   
-                  {/* Ordem das linhas alterada conforme solicitado */}
                   <Line 
                     type="monotone" 
                     name="Quant. Dados" 
@@ -346,7 +363,6 @@ const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
                 </LineChart>
               </ResponsiveContainer>
 
-              {/* Indicador de R² movido levemente para baixo (top-[100px]) para não conflitar com a legenda */}
               {r2ValorCalculado && (
                 <div 
                   className="absolute left-1/2 -translate-x-1/2 top-[100px] bg-white/90 backdrop-blur-sm px-3.5 py-1 rounded-full shadow-sm text-xs sm:text-sm font-bold border pointer-events-none flex items-center gap-1 z-10 transition-colors duration-300"
@@ -385,6 +401,7 @@ const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
                           value={linha.experimental}
                           onChange={(e) => handleInputChange(index, e.target.value)}
                           className="w-full text-center border border-slate-300 rounded-md py-1 px-1 focus:outline-none focus:ring-2 transition-all"
+                          style={{ outlineColor: corPrincipal }}
                           placeholder="-"
                         />
                       </td>
