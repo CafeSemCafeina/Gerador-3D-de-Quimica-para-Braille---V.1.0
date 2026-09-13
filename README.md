@@ -69,6 +69,11 @@ O projeto foi inicializado com [Vite](https://vitejs.dev/). Para rodar o ambient
 1. Clone o repositório:
    ```bash
    git clone [https://github.com/SEU-USUARIO/quimica-ao-alcance-das-maos.git](https://github.com/SEU-USUARIO/quimica-ao-alcance-das-maos.git)
+   ```
+
+## Publicar contribuição no Vercel Hobby
+
+O plano gratuito só faz deploy se o author do commit for o dono da conta. No PR, use **Create a merge commit**. Se o Vercel recusar, rode `./scripts/publicar-pr-hobby.sh <pr>` — detalhes em [docs/publicar-no-vercel-hobby.md](docs/publicar-no-vercel-hobby.md).
 
 
 
