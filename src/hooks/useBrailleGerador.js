@@ -107,7 +107,7 @@ export const useBrailleGerador = () => {
       setStlUrl(criarUrlStl(buffer));
     } catch (error) {
       if (token !== geracaoId.current) return;
-      console.error("Erro ao gerar modelo:", error);
+      console.error("Erro ao gerar modelo:", error?.message || error);
       alert("Ocorreu um erro ao gerar a malha 3D.");
     } finally {
       if (token === geracaoId.current) setIsGenerating(false);
