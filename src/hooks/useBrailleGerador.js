@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { gerarModeloJSCAD, gerarUrlSTL } from '../braille3d';
+import { useState, useEffect, useRef } from 'react';
 import { parseBraille as parseBrailleTexto, cellsToBrailleUnicode } from '../utils/brailleParser';
 import { translateBrailleToText } from '../utils/brailleTranslator';
 import { checarSugestaoQuimica } from '../utils/chemSuggestions';
+import { criarUrlStl, gerarStlAssincrono } from '../utils/gerarStl';
 
 const CONFIG_3D_PADRAO = {
   alturaPonto: 0.75, diametroPonto: 1.9, espessuraPlaca: 5.0, borda: 0.0,
@@ -45,16 +45,47 @@ export const useBrailleGerador = () => {
     return result;
   };
 
+  const geracaoId = useRef(0);
+  const stlUrlRef = useRef(null);
+
+  const invalidarStl = () => {
+    setStlUrl((url) => {
+      if (url) URL.revokeObjectURL(url);
+      return null;
+    });
+    setDimensoesGerador(null);
+  };
+
   useEffect(() => { parseBraille(input); }, []);
+
+  useEffect(() => {
+    stlUrlRef.current = stlUrl;
+  }, [stlUrl]);
+
+  useEffect(() => () => {
+    if (stlUrlRef.current) URL.revokeObjectURL(stlUrlRef.current);
+  }, []);
 
   const handleAplicarSugestao = (novaFormula) => {
     setInput(novaFormula);
     parseBraille(novaFormula);
+    invalidarStl();
   };
 
   const handleInputChange = (novoValor) => {
     setInput(novoValor);
     parseBraille(novoValor);
+    invalidarStl();
+  };
+
+  const atualizarConfig3D = (next) => {
+    setConfig3D(next);
+    invalidarStl();
+  };
+
+  const atualizarConfigTextoVerso = (next) => {
+    setConfigTextoVerso(next);
+    invalidarStl();
   };
 
   const handleGenerate = async (e) => {
@@ -62,15 +93,25 @@ export const useBrailleGerador = () => {
     const blocosGerados = parseBraille(input);
     if (!blocosGerados || blocosGerados.length === 0) return;
 
-    setIsGenerating(true); setStlUrl(null); setDimensoesGerador(null);
-    await new Promise(resolve => setTimeout(resolve, 50));
+    const token = ++geracaoId.current;
+    setIsGenerating(true);
+    invalidarStl();
 
     try {
-      const modelo3D = gerarModeloJSCAD(blocosGerados, config3D);
-      const url = gerarUrlSTL(modelo3D);
-      setStlUrl(url);
-    } catch (error) { console.error("Erro ao gerar modelo:", error); alert("Ocorreu um erro ao gerar a malha 3D."); }
-    finally { setIsGenerating(false); }
+      const buffer = await gerarStlAssincrono('braille', {
+        cells: blocosGerados,
+        config: config3D,
+        textoVerso: { ...configTextoVerso, texto: input }
+      });
+      if (token !== geracaoId.current) return;
+      setStlUrl(criarUrlStl(buffer));
+    } catch (error) {
+      if (token !== geracaoId.current) return;
+      console.error("Erro ao gerar modelo:", error?.message || error);
+      alert("Ocorreu um erro ao gerar a malha 3D.");
+    } finally {
+      if (token === geracaoId.current) setIsGenerating(false);
+    }
   };
 
   const brailleUnicodeText = cellsToBrailleUnicode(cells);
@@ -123,10 +164,8 @@ export const useBrailleGerador = () => {
     input, setInput: handleInputChange, cells, isGenerating, stlUrl,
     dimensoesGerador, setDimensoesGerador, mostrarDimensoesGerador, setMostrarDimensoesGerador,
     copiado, brailleInput, translatedText, isListening, showAdvanced, setShowAdvanced,
-    config3D, setConfig3D, 
-    
-    // Adição da variavel de Texto no Verso para a interface da Aba ler e modificar (deve fazer o site voltar ao ar)
-    configTextoVerso, setConfigTextoVerso, 
+    config3D, setConfig3D: atualizarConfig3D,
+    configTextoVerso, setConfigTextoVerso: atualizarConfigTextoVerso, 
     
     sugestaoQuimica, handleAplicarSugestao, handleGenerate,
     brailleUnicodeText, handleCopy, handleBrailleTranslate, handleClearTranslator,

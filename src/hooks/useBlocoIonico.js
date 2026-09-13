@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { geradorBlocoIonicoJSCAD, gerarUrlSTL } from '../braille3d';
+import { useState, useEffect, useRef } from 'react';
 import { parseBraille } from '../utils/brailleParser';
 import { getIonColorBasedOnTheme } from '../data/theme';
+import { criarUrlStl, gerarStlAssincrono } from '../utils/gerarStl';
 
 /**
  * Encapsula todo o estado e as ações da aba "Blocos Iônicos": configuração
@@ -30,15 +30,50 @@ export const useBlocoIonico = (corPrincipal) => {
   const [mostrarDimensoesIonico, setMostrarDimensoesIonico] = useState(true);
   const [showDimensoesFisicasIonico, setShowDimensoesFisicasIonico] = useState(true);
 
+  const CAMPOS_MALHA = [
+    'tipo', 'valencia', 'largura', 'altura', 'espessura',
+    'larguraEncaixe', 'alturaEncaixe', 'formula', 'espessuraTexto',
+    'fonte', 'incluirBraille'
+  ];
+
+  const geracaoId = useRef(0);
+  const ionStlUrlRef = useRef(null);
+
+  const invalidarIonStl = () => {
+    setIonStlUrl((url) => {
+      if (url) URL.revokeObjectURL(url);
+      return null;
+    });
+    setDimensoesIonico(null);
+  };
+
+  useEffect(() => {
+    ionStlUrlRef.current = ionStlUrl;
+  }, [ionStlUrl]);
+
+  useEffect(() => () => {
+    if (ionStlUrlRef.current) URL.revokeObjectURL(ionStlUrlRef.current);
+  }, []);
+
+  const aplicarIonConfig = (next) => {
+    setIonConfig((prev) => {
+      const resolved = typeof next === 'function' ? next(prev) : next;
+      if (CAMPOS_MALHA.some((campo) => resolved[campo] !== prev[campo])) {
+        queueMicrotask(invalidarIonStl);
+      }
+      return resolved;
+    });
+  };
+
   useEffect(() => {
     if (!ionConfig.corCustomizada) {
-      setIonConfig(prev => ({ ...prev, corModelo: getIonColorBasedOnTheme(corPrincipal, prev.tipo) }));
+      aplicarIonConfig(prev => ({ ...prev, corModelo: getIonColorBasedOnTheme(corPrincipal, prev.tipo) }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [corPrincipal, ionConfig.tipo]);
 
   const selecionarTipoValencia = (tipo, valencia) => {
-    setIonConfig(prev => ({
+    aplicarIonConfig(prev => ({
       ...prev,
       tipo,
       valencia,
@@ -48,19 +83,26 @@ export const useBlocoIonico = (corPrincipal) => {
 
   const handleGenerateIon = async (e) => {
     e.preventDefault();
-    setIsGeneratingIon(true); setIonStlUrl(null); setDimensoesIonico(null);
-    await new Promise(resolve => setTimeout(resolve, 50));
+    const token = ++geracaoId.current;
+    setIsGeneratingIon(true);
+    invalidarIonStl();
 
     try {
       const brailleGerado = ionConfig.incluirBraille ? parseBraille(ionConfig.formula) : [];
-      const modeloIon = geradorBlocoIonicoJSCAD({ ...ionConfig, cellsBraille: brailleGerado });
-      setIonStlUrl(gerarUrlSTL(modeloIon));
-    } catch (error) { console.error("Erro no bloco iônico:", error); alert("Ocorreu um erro ao modelar o bloco iônico."); }
-    finally { setIsGeneratingIon(false); }
+      const buffer = await gerarStlAssincrono('ionico', { ...ionConfig, cellsBraille: brailleGerado });
+      if (token !== geracaoId.current) return;
+      setIonStlUrl(criarUrlStl(buffer));
+    } catch (error) {
+      if (token !== geracaoId.current) return;
+      console.error("Erro no bloco iônico:", error);
+      alert("Ocorreu um erro ao modelar o bloco iônico.");
+    } finally {
+      if (token === geracaoId.current) setIsGeneratingIon(false);
+    }
   };
 
   return {
-    ionConfig, setIonConfig, selecionarTipoValencia,
+    ionConfig, setIonConfig: aplicarIonConfig, selecionarTipoValencia,
     ionStlUrl, isGeneratingIon, handleGenerateIon,
     dimensoesIonico, setDimensoesIonico,
     mostrarDimensoesIonico, setMostrarDimensoesIonico,
