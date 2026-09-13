@@ -415,97 +415,101 @@ const DadosRadioativosTab = ({ theme, corPrincipal, setCorPrincipal }) => {
             </div>
             <div className="p-3 bg-slate-50 text-xs text-slate-500 text-center border-t border-slate-200">
               Clique em <strong>Jogar Dados</strong> para simular rodadas ou digite manualmente.
-              
-              
-              {/* === SEÇÃO FÍSICA E IMPRESSÃO 3D === */}
-<div className="mt-12 pt-8 border-t border-slate-200">
-  <h2 className="text-2xl font-bold mb-4" style={{ color: corPrincipal }}>
-    Versão Física: Fabricação em Impressão 3D
-  </h2>
-  
-  <p className="text-slate-700 mb-6 leading-relaxed">
-    Produza seu próprio conjunto de Dados Radioativos. O arquivo <strong>3MF</strong> disponibilizado contém todas as placas organizadas, numeradas e nomeadas por tipo de conjunto, além do case de armazenamento para os 216 dados. O estojo foi projetado com marcações em Braille para garantir acessibilidade a alunos com deficiência visual.
-  </p>
+            </div>
+          </div>
+        </div>
 
-  {/* Tabela de Tempos de Impressão */}
-  <div className="overflow-x-auto mb-8 shadow-sm rounded-lg border border-slate-200">
-    <table className="w-full text-left border-collapse">
-      <thead>
-        <tr style={{ backgroundColor: `${corPrincipal}20` }}>
-          <th className="p-4 font-semibold text-slate-800 border-b border-slate-200">Componente</th>
-          <th className="p-4 font-semibold text-slate-800 border-b border-slate-200">Quantidade</th>
-          <th className="p-4 font-semibold text-slate-800 border-b border-slate-200">Tempo Estimado</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr className="hover:bg-slate-50">
-          <td className="p-4 border-b border-slate-200">Conjuntos Radioativos</td>
-          <td className="p-4 border-b border-slate-200">5 conjuntos (42 unidades/cada)</td>
-          <td className="p-4 border-b border-slate-200">35 horas (7h por conjunto)</td>
-        </tr>
-        <tr className="hover:bg-slate-50">
-          <td className="p-4 border-b border-slate-200">Dados Estáveis (Não-radioativos)</td>
-          <td className="p-4 border-b border-slate-200">1 conjunto (6 unidades)</td>
-          <td className="p-4 border-b border-slate-200">1 hora</td>
-        </tr>
-        <tr className="hover:bg-slate-50">
-          <td className="p-4 border-b border-slate-200">Case de Armazenamento (Base + Tampa)</td>
-          <td className="p-4 border-b border-slate-200">1 estojo (Para 216 dados)</td>
-          <td className="p-4 border-b border-slate-200">4 horas</td>
-        </tr>
-        <tr className="font-semibold bg-slate-50">
-          <td className="p-4" colSpan="2">Tempo Total (Bambu Lab P1S / Anycubic Kobra 3 Combo)</td>
-          <td className="p-4 text-slate-900">40 horas</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+        {/* === SEÇÃO FÍSICA E IMPRESSÃO 3D === */}
+        <div className="mt-12 pt-8 border-t border-slate-200">
+          <h2 className="text-2xl font-bold mb-4" style={{ color: corPrincipal }}>
+            Versão Física: Fabricação em Impressão 3D
+          </h2>
+          
+          <p className="text-slate-700 mb-6 leading-relaxed">
+            Produza seu próprio conjunto de Dados Radioativos. O arquivo <strong>3MF</strong> disponibilizado contém todas as placas organizadas, numeradas e nomeadas por tipo de conjunto, além do case de armazenamento para os 216 dados. O estojo foi projetado com marcações em Braille para garantir acessibilidade a alunos com deficiência visual.
+          </p>
 
-  {/* Instruções de Hardware */}
-  <div className="bg-slate-50 p-6 rounded-lg mb-8 border border-slate-200">
-    <h3 className="font-bold text-lg mb-3 text-slate-800">Compatibilidade de Impressão</h3>
-    <ul className="list-disc pl-5 text-slate-700 space-y-2">
-      <li><strong>Sistemas Multicores (Plug and Play):</strong> O arquivo 3MF está otimizado e pronto para fatiamento em impressoras modernas com sistemas multimaterial (ex: AMS ou ACE Pro).</li>
-      <li><strong>Sistemas Monocromáticos (Ex: Ender-3 V3 KE):</strong> É perfeitamente possível imprimir o jogo em máquinas tradicionais de uma única extrusora. Basta adicionar pausas no fatiador (comando M600) na camada dos textos/símbolos e realizar a troca de filamento manualmente.</li>
-    </ul>
-  </div>
+          {/* Tabela de Tempos de Impressão */}
+          <div className="overflow-x-auto mb-8 shadow-sm rounded-lg border border-slate-200">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr style={{ backgroundColor: `${corPrincipal}20` }}>
+                  <th className="p-4 font-semibold text-slate-800 border-b border-slate-200">Componente</th>
+                  <th className="p-4 font-semibold text-slate-800 border-b border-slate-200">Quantidade</th>
+                  <th className="p-4 font-semibold text-slate-800 border-b border-slate-200">Tempo Estimado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="hover:bg-slate-50">
+                  <td className="p-4 border-b border-slate-200">Conjuntos Radioativos</td>
+                  <td className="p-4 border-b border-slate-200">5 conjuntos (42 unidades/cada)</td>
+                  <td className="p-4 border-b border-slate-200">35 horas (7h por conjunto)</td>
+                </tr>
+                <tr className="hover:bg-slate-50">
+                  <td className="p-4 border-b border-slate-200">Dados Estáveis (Não-radioativos)</td>
+                  <td className="p-4 border-b border-slate-200">1 conjunto (6 unidades)</td>
+                  <td className="p-4 border-b border-slate-200">1 hora</td>
+                </tr>
+                <tr className="hover:bg-slate-50">
+                  <td className="p-4 border-b border-slate-200">Case de Armazenamento (Base + Tampa)</td>
+                  <td className="p-4 border-b border-slate-200">1 estojo (Para 216 dados)</td>
+                  <td className="p-4 border-b border-slate-200">4 horas</td>
+                </tr>
+                <tr className="font-semibold bg-slate-50">
+                  <td className="p-4" colSpan="2">Tempo Total (Bambu Lab P1S / Anycubic Kobra 3 Combo)</td>
+                  <td className="p-4 text-slate-900">40 horas</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-  {/* Botões de Download */}
-  <div className="flex flex-wrap gap-4 mb-10">
-    <a 
-      href="/downloads/dados_radioativos.3mf" 
-      download
-      className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-semibold transition-opacity hover:opacity-90"
-      style={{ backgroundColor: corPrincipal }}
-    >
-      Baixar Arquivo 3MF
-    </a>
-    <a 
-      href="/downloads/manual_regras.pdf" 
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2 px-6 py-3 rounded-lg text-slate-700 font-semibold border-2 bg-white hover:bg-slate-50 transition-colors"
-      style={{ borderColor: corPrincipal }}
-    >
-      Abrir Manual de Regras (PDF)
-    </a>
-  </div>
+          {/* Instruções de Hardware */}
+          <div className="bg-slate-50 p-6 rounded-lg mb-8 border border-slate-200">
+            <h3 className="font-bold text-lg mb-3 text-slate-800">Compatibilidade de Impressão</h3>
+            <ul className="list-disc pl-5 text-slate-700 space-y-2">
+              <li><strong>Sistemas Multicores (Plug and Play):</strong> O arquivo 3MF está otimizado e pronto para fatiamento em impressoras modernas com sistemas multimaterial (ex: AMS ou ACE Pro).</li>
+              <li><strong>Sistemas Monocromáticos (Ex: Ender-3 V3 KE):</strong> É perfeitamente possível imprimir o jogo em máquinas tradicionais de uma única extrusora. Basta adicionar pausas no fatiador (comando M600) na camada dos textos/símbolos e realizar a troca de filamento manualmente.</li>
+            </ul>
+          </div>
 
-  {/* Galeria de Instruções do Fatiador */}
-  <h3 className="font-bold text-lg mb-4 text-slate-800">Instruções de Fatiamento</h3>
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
-      <img src="/images/dados/instrucao_1.png" alt="Instrução de fatiamento para sistema multicolor" className="w-full h-auto rounded" />
-      <p className="text-sm text-slate-600 mt-2 text-center">Configuração para sistemas Multicores</p>
+          {/* Botões de Download */}
+          <div className="flex flex-wrap gap-4 mb-10">
+            <a 
+              href="/downloads/dados_radioativos.3mf" 
+              download
+              className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-semibold transition-opacity hover:opacity-90"
+              style={{ backgroundColor: corPrincipal }}
+            >
+              Baixar Arquivo 3MF
+            </a>
+            <a 
+              href="/downloads/manual_regras.pdf" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-6 py-3 rounded-lg text-slate-700 font-semibold border-2 bg-white hover:bg-slate-50 transition-colors"
+              style={{ borderColor: corPrincipal }}
+            >
+              Abrir Manual de Regras (PDF)
+            </a>
+          </div>
+
+          {/* Galeria de Instruções do Fatiador */}
+          <h3 className="font-bold text-lg mb-4 text-slate-800">Instruções de Fatiamento</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
+              <img src="/images/dados/instrucao_1.png" alt="Instrução de fatiamento para sistema multicolor" className="w-full h-auto rounded" />
+              <p className="text-sm text-slate-600 mt-2 text-center">Configuração para sistemas Multicores</p>
+            </div>
+            <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
+              <img src="/images/dados/instrucao_2.png" alt="Instrução para pausa e troca de cor (M600)" className="w-full h-auto rounded" />
+              <p className="text-sm text-slate-600 mt-2 text-center">Configuração de pausa (M600) para monocromáticas</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
     </div>
-    <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm">
-      <img src="/images/dados/instrucao_2.png" alt="Instrução para pausa e troca de cor (M600)" className="w-full h-auto rounded" />
-      <p className="text-sm text-slate-600 mt-2 text-center">Configuração de pausa (M600) para monocromáticas</p>
-    </div>
-  </div>
-</div>
-              
-
+  );
 };
 
 export default DadosRadioativosTab;
